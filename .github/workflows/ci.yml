@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+        cache: true
+
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Check formatting
+      run: go fmt ./... && git diff --exit-code
+
+    - name: Run go vet
+      run: go vet ./...
+
+    - name: Run tests
+      run: go test ./... -v -race -coverprofile=coverage.txt
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.txt
+        fail_ci_if_error: false
+
+    - name: Build server and client
+      run: |
+        go build -o /dev/null ./cmd/server
+        go build -o /dev/null ./cmd/client
