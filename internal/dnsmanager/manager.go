@@ -69,10 +69,14 @@ func (m *Manager) modify(add bool, target string) error {
 	}
 	defer f.Close()
 
-	if err := unix.Flock(int(f.Fd()), unix.LOCK_EX); err != nil {
-		return fmt.Errorf("failed to lock resolv.conf: %w", err)
+	if errLock := unix.Flock(int(f.Fd()), unix.LOCK_EX); errLock != nil {
+		return fmt.Errorf("failed to lock resolv.conf: %w", errLock)
 	}
-	defer unix.Flock(int(f.Fd()), unix.LOCK_UN)
+	defer func() {
+		if errUnlock := unix.Flock(int(f.Fd()), unix.LOCK_UN); errUnlock != nil {
+			fmt.Printf("Warning: failed to unlock resolv.conf: %v\n", errUnlock)
+		}
+	}()
 
 	cfg, err := m.parseConfigFileWithReader(f)
 	if err != nil {
@@ -115,7 +119,9 @@ func (m *Manager) parseConfigFile() (*DNSConfig, error) {
 }
 
 func (m *Manager) parseConfigFileWithReader(f *os.File) (*DNSConfig, error) {
-	f.Seek(0, 0)
+	if _, err := f.Seek(0, 0); err != nil {
+		return nil, fmt.Errorf("failed to seek file: %w", err)
+	}
 
 	var nameservers, search, options []string
 	scanner := bufio.NewScanner(f)

@@ -51,7 +51,7 @@ func main() {
 	}
 }
 
-func listNameservers(cmd *cobra.Command, args []string) {
+func listNameservers(_ *cobra.Command, _ []string) {
 	resp, err := http.Get(serverURL + "/dns")
 	if err != nil {
 		fmt.Printf("Connection error: %v\n", err)
@@ -71,11 +71,11 @@ func listNameservers(cmd *cobra.Command, args []string) {
 	}
 }
 
-func addNameserver(cmd *cobra.Command, args []string) {
+func addNameserver(_ *cobra.Command, args []string) {
 	sendRequest("POST", args[0])
 }
 
-func removeNameserver(cmd *cobra.Command, args []string) {
+func removeNameserver(_ *cobra.Command, args []string) {
 	sendRequest("DELETE", args[0])
 }
 

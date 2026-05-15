@@ -22,6 +22,12 @@ jobs:
     - name: Install dependencies
       run: go mod download
 
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: v1.64
+        args: --timeout=5m
+
     - name: Check formatting
       run: go fmt ./... && git diff --exit-code
 
